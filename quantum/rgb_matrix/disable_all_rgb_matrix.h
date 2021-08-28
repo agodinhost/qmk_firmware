@@ -40,9 +40,6 @@
 #define DISABLE_RGB_MATRIX_DUAL_BEACON                     /* dual_beacon_anim.h */
 #define DISABLE_RGB_MATRIX_GRADIENT_LEFT_RIGHT             /* gradient_left_right_anim.h */
 #define DISABLE_RGB_MATRIX_GRADIENT_UP_DOWN                /* gradient_up_down_anim.h */
-#define DISABLE_RGB_MATRIX_HUE_BREATHING                   /* hue_breathing_anim.h */
-#define DISABLE_RGB_MATRIX_HUE_PENDULUM                    /* hue_pendulum_anim.h */
-#define DISABLE_RGB_MATRIX_HUE_WAVE                        /* hue_wave_anim.h */
 #define DISABLE_RGB_MATRIX_JELLYBEAN_RAINDROPS             /* jellybean_raindrops_anim.h */
 #define DISABLE_RGB_MATRIX_RAINBOW_BEACON                  /* rainbow_beacon_anim.h */
 #define DISABLE_RGB_MATRIX_RAINBOW_MOVING_CHEVRON          /* rainbow_moving_chevron_anim.h */
