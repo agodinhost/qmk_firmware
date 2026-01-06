@@ -42,7 +42,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "quantum/led_matrix/disable_all_led_matrix.h"
 
 #include "quantum/rgb_matrix/disable_all_rgb_matrix.h"
-#define RGB_MATRIX_STARTUP_MODE RGB_MATRIX_RAINDROPS
-#undef DISABLE_RGB_MATRIX_RAINDROPS
-#undef DISABLE_RGB_MATRIX_DIGITAL_RAIN
-#undef DISABLE_RGB_MATRIX_SPLASH
+//#undef DISABLE_RGB_MATRIX_RAINDROPS
+//#undef DISABLE_RGB_MATRIX_DIGITAL_RAIN
+//#undef DISABLE_RGB_MATRIX_SPLASH
+
+//#define ENABLE_RGB_MATRIX_SOLID_REACTIVE
+//#define RGB_MATRIX_STARTUP_MODE RGB_MATRIX_SOLID_REACTIVE

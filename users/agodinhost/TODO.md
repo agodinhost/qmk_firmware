@@ -1,4 +1,8 @@
 
+# HID Service / led warnings
+
+    - TODO: hidReports.
+
 # 1. Caffeine On/Off
 
 ## 1.1 use mouse/keyboards keystrokes.
@@ -53,6 +57,11 @@ Prevent your computer from going to sleep
 
 1. TODO, disable unwanted RGB_LIGH modes that you dont like to reduce the final file size.
 
+1. TODO, rgb_matrix initial mode 5
+
+1. TODO, process_rgb.c - integrate rgb_dsiplay_value in order to be able to see the current settings
+
+
 1. TODO, Split Wakeup.c / wakeup.h. This wll make easier to merge your code.
 
 1. TODO, RCTRL Tap = MO(3)
@@ -65,7 +74,7 @@ Prevent your computer from going to sleep
     dynamic_keymap_macro_send
     [Dynamic macros: record and replay macros in runtime](https://git.roxanne.dev/roxxers/qmk-custom-firmware/src/commit/e229dcadb5c9f8c09f14a439fe5a4c7c48ba2249/Macros.md?lang=tr-TR#dynamic-macros-record-and-replay-macros-in-runtime)
 
-1. REASEARCH, Auto shift using TAP instead of hold.
+1. REASEARCH, Auto shift using TAP instead of hold?
 
 1. TODO: SECRET
     spy ON if SECRET not provided

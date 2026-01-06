@@ -18,21 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "agodinhost.h"
 #include "version.h"
 
-#ifndef inc
-#    define inc(val, min, max)                         \
-        __extension__({                                \
-            __typeof(val) tmp = val + 1;               \
-            val               = tmp > max ? min : tmp; \
-        })
-#endif
-#ifndef dec
-#    define dec(val, min, max)                         \
-        __extension__({                                \
-            __typeof(val) tmp = val - 1;               \
-            val               = tmp < min ? max : tmp; \
-        })
-#endif
-
 static inline
 bool shiftReplace(uint16_t keycode, keyrecord_t *record) {
     static uint8_t mod_state = 0;     /* last mod_state */
@@ -73,25 +58,46 @@ static uint8_t  wk_after = WAKEUP_HOURS_MIN; /* wake up after 1 hour, default. R
 static uint8_t  mn_count = 0;
 static uint8_t  hr_count = 0;
 
-static const uint8_t COLORS[3][3] = {{RGB_RED}, {RGB_YELLOW}, {RGB_GREEN}};
+/* only when using one led per key */
+//TODO: #ifdef RGB_DISPLAY_STATE
+//RGB_MATRIX_ENABLE ||
+//( BACKLIGHT_ENABLE && BACKLIGHT_ONELED_PERKEY)
+//( RGBLIGHT_ENABLE  && RGBLIGHT_ONELED_PERKEY)
+
+//TODO: rgb_display -> led_state? led_display_state?
+
+#ifdef RGB_MATRIX_ENABLE
+
+static const uint8_t COLORS[3][3] = {{RGB_GREEN}, {RGB_ORANGE}, {RGB_RED}};
 
 static inline
-void set_color(int index, const uint8_t color[3]) {
+void rgb_color_index(int index, const uint8_t color[3]) {
+    if (index == 0) index = 10;
     rgb_matrix_set_color(index, color[0], color[1], color[2]);
 }
 
 static inline
-void rgb_display(uint8_t n) {
+void rgb_display_value(uint8_t n) {
     uint8_t i = 0;
     while (n > 0) {
         uint8_t m = n % 10;
-#ifdef CONSOLE_ENABLE
-        uprintf("m: %u\n", m);
-#endif
-        set_color(NUMBER_INDEX + m, COLORS[i]);
+        rgb_color_index(NUMBER_INDEX + m, COLORS[i]);
         i++;
         n /= 10;
     }
+}
+#else
+#define rgb_display_value(n)
+#endif
+
+//TODO
+static inline
+void rgb_matrix_blink(void) {
+  for (int i = 0; i < BACKLIGHT_LED_COUNT; i++) {
+    HSV hsv = { .h = 0, .s = 0, .v = 255 - g_key_hit[i] };
+    RGB rgb = hsv_to_rgb(hsv);
+    backlight_set_color(i, rgb.r, rgb.g, rgb.b);
+  }
 }
 
 /* ------------------------------------------------------------------------- */
@@ -103,9 +109,7 @@ bool wkTog(keyrecord_t *record) {
         wk_timer = timer_read();
         return false;
     }
-#ifdef CONSOLE_ENABLE
-    uprintf("wk_on: %b\n", wk_on);
-#endif
+    dprintf("wk_on: %b\r\n", wk_on);
     return true;
 }
 
@@ -113,12 +117,10 @@ static inline
 bool wkInc(keyrecord_t *record) {
     if (IS_PRESSED(record->event)) {
         inc(wk_after, WAKEUP_HOURS_MIN, WAKEUP_HOURS_MAX);
-        rgb_display(wk_after);
+        rgb_display_value(wk_after);
         return false;
     }
-#ifdef CONSOLE_ENABLE
-    uprintf("wk_after: %u\n", wk_after);
-#endif
+    dprintf("wk_after: %u\r\n", wk_after);
     return true;
 }
 
@@ -126,13 +128,27 @@ static inline
 bool wkDec(keyrecord_t *record) {
     if (IS_PRESSED(record->event)) {
         dec(wk_after, WAKEUP_HOURS_MIN, WAKEUP_HOURS_MAX);
-        rgb_display(wk_after);
+        rgb_display_value(wk_after);
         return false;
     }
-#ifdef CONSOLE_ENABLE
-    uprintf("wk_after: %u\n", wk_after);
-#endif
+    dprintf("wk_after: %u\r\n", wk_after);
     return true;
+}
+
+static inline
+void tap_keyb_or_move_mouse(void) {
+#ifdef WAKEUP_MOUSE_ENABLE
+    tap_code(KC_MS_RIGHT);
+    tap_code(KC_MS_DOWN);
+    tap_code(KC_MS_LEFT);
+    tap_code(KC_MS_UP);
+#endif
+#ifdef WAKEUP_KEYBOARD_ENABLE
+    tap_code(KC_RIGHT);
+    tap_code(KC_DOWN);
+    tap_code(KC_LEFT);
+    tap_code(KC_UP);
+#endif
 }
 
 #endif
@@ -166,8 +182,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;  // TODO
     }
 
-#ifdef CONSOLE_ENABLE
-    uprintf("keycode: 0x%04X, col: %u, row: %u, pressed: %b, time: %u, interrupted: %b, count: %u\n",
+    dprintf("keycode: 0x%04X, col: %u, row: %u, pressed: %b, time: %u, interrupted: %b, count: %u\r\n",
         keycode,
         record->event.key.col,
         record->event.key.row,
@@ -175,61 +190,49 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         record->event.time,
         record->tap.interrupted,
         record->tap.count);
-#endif
 
     return true; /* Process all other keycodes normally */
 }
 
 void matrix_init_user(void) {
+    debug_enable   = true;
+    // debug_matrix   = true;
+    // debug_keyboard = true;
+    // debug_mouse    = true;
+    dprintln("matrix_init_user");
+
+    rgb_matrix_config.mode = 5; /* TODO: find this effect name */
+    rgb_matrix_config.enable = true;
+
     wk_timer = timer_read();
     mn_count = hr_count = 0;
-#ifdef CONSOLE_ENABLE
-    println("matrix_init_user");
-#endif
 }
 
 void matrix_scan_user(void) {
     if (wk_on) {
         if (timer_elapsed(wk_timer) >= ONE_MINUTE) {
+            tap_keyb_or_move_mouse();
             mn_count ++;
-
-#ifdef WAKEUP_MOUSE_ENABLE
-            tap_code(KC_MS_RIGHT);
-            tap_code(KC_MS_DOWN);
-            tap_code(KC_MS_LEFT);
-            tap_code(KC_MS_UP);
-#endif
-#ifdef WAKEUP_KEYBOARD_ENABLE
-            tap_code(KC_RIGHT);
-            tap_code(KC_DOWN);
-            tap_code(KC_LEFT);
-            tap_code(KC_UP);
-#endif
-            rgb_matrix_set_color(WAKEUP_INDEX, RGB_RED);
-            rgb_display(wk_after);
-
-#ifdef CONSOLE_ENABLE
-            print("m");
-#endif
+            dprint("m");
             if (mn_count >= 60) {
                 mn_count = 0;
                 hr_count ++;
                 wk_on = hr_count < wk_after;
-
-                rgb_display(hr_count);
-
-#ifdef CONSOLE_ENABLE
-                print("h");
-#endif
+                dprint("h");
                 if (!wk_on) {
                     hr_count = 0;
-#ifdef CONSOLE_ENABLE
-                    println("D");
-#endif
+                    dprintln("D");
                 }
             }
 
             wk_timer = timer_read();
         }
+    }
+}
+
+void rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
+    if (wk_on) {
+        rgb_display_value(wk_after);
+        rgb_matrix_set_color(WAKEUP_INDEX, RGB_RED);
     }
 }

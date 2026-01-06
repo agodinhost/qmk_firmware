@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include QMK_KEYBOARD_H
 
 #ifdef CONSOLE_ENABLE
-#    include "print.h"
+#   include "print.h"
 #endif
 
 #define WAKEUP_KEYBOARD_ENABLE
@@ -43,7 +43,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define WAKEUP_INDEX        45  /* col + row * MATRIX_COLS */
 
-#define NUMBER_INDEX        1   /* col + row * MATRIX_COLS */
+#define NUMBER_INDEX        0   /* col + row * MATRIX_COLS */
 
 enum custom_keycodes {
     KC_WKTOG = SAFE_RANGE,      /* wake up toggle */
@@ -52,3 +52,18 @@ enum custom_keycodes {
     KC_INFO,                    /* version info */
     KC_RCTOG                    /* record toggle */
 };
+
+#ifndef inc
+#    define inc(val, min, max)                          \
+        __extension__({                                 \
+            __typeof(val) tmp = val + 1;                \
+            val               = tmp > max ? min : tmp;  \
+        })
+#endif
+#ifndef dec
+#    define dec(val, min, max)                          \
+        __extension__({                                 \
+            __typeof(val) tmp = val - 1;                \
+            val               = tmp < min ? max : tmp;  \
+        })
+#endif
